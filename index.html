@@ -1,0 +1,93 @@
+
+<html>
+<head>
+    <title>Dynamic Todo App with Notifications</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pacifico', cursive;
+            background: linear-gradient(45deg, #d9f0ff, #a3d5ff, #83c9f4, #d9f0ff);
+            color: #333333;
+        }
+        .font-bold {
+            color: #83c9f4;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <main class="flex-grow p-4">
+        <h1 class="text-3xl font-bold mb-4">Dynamic Todo App with Notifications</h1>
+        <form id="todoForm" class="mb-6">
+            <div class="mb-4">
+                <label for="taskDescription" class="block mb-2">Task Description:</label>
+                <input type="text" id="taskDescription" name="taskDescription" 
+                       class="w-full px-3 py-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label for="dueDateTime" class="block mb-2">Due Date and Time:</label>
+                <input type="datetime-local" id="dueDateTime" name="dueDateTime" 
+                       class="w-full px-3 py-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label for="notificationPreferences" class="block mb-2">Notification Preferences:</label>
+                <input type="text" id="notificationPreferences" name="notificationPreferences" 
+                       class="w-full px-3 py-2 border rounded" required>
+            </div>
+            <button type="button" id="submitButton" 
+                    class="w-full bg-primary-color text-white py-2 px-4 rounded hover:bg-secondary-color">
+                Submit
+            </button>
+        </form>
+
+        <section id="output" class="bg-white p-4 border rounded shadow">
+            <h2 class="text-xl font-bold mb-2">Output</h2>
+            <p id="outputText" class="whitespace-pre-wrap"></p>
+        </section>
+    </main>
+
+    <footer class="text-center py-4">
+        <a href="https://cbse.nic.in" target="_blank" class="text-blue-500 hover:underline">Made with ❤️</a>
+    </footer>
+
+    <script>
+        document.getElementById('submitButton').addEventListener('click', () => {
+            const taskDescription = document.getElementById('taskDescription').value;
+            const dueDateTime = document.getElementById('dueDateTime').value;
+            const notificationPreferences = document.getElementById('notificationPreferences').value;
+
+            const substitutedPrompt = `Generate a personalized notification reminder for completing the task: "${taskDescription}" by "${dueDateTime}" with preferences set to "${notificationPreferences}".`;
+
+            document.getElementById('outputText').innerText = ''; // Clear the output section
+
+            const websocket = new WebSocket('wss://backend.buildpicoapps.com/ask_ai_streaming_v2');
+
+            websocket.addEventListener("open", () => {
+                websocket.send(
+                    JSON.stringify({
+                        appId: "how-hit",
+                        prompt: substitutedPrompt,
+                    })
+                );
+            });
+
+            websocket.addEventListener("message", (event) => {
+                console.log(event.data);
+                document.getElementById('outputText').innerText += event.data;
+            });
+
+            websocket.addEventListener("close", (event) => {
+                console.log("Connection closed", event.code, event.reason);
+                if (event.code != 1000) {
+                    alert("Oops, we ran into an error. Refresh the page and try again.");
+                }
+            });
+
+            websocket.addEventListener("error", (error) => {
+                console.log('WebSocket error', error);
+                alert("Oops, we ran into an error. Refresh the page and try again.");
+            });
+        });
+    </script>
+</body>
+</html>
